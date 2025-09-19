@@ -8,8 +8,9 @@ export default defineConfig({
   base: isVercel ? '/' : '/Regional-App/',
   plugins: [react()],
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src'),
-    },
+    alias: { '@': path.resolve(__dirname, 'src') },
+  },
+  build: {
+    sourcemap: true, // enable source maps for production to debug errors
   },
 })
