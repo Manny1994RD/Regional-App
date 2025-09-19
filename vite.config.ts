@@ -1,10 +1,15 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
+import path from 'node:path'
 
-// Use '/' on Vercel, '/Regional-App/' on GitHub Pages
 const isVercel = !!process.env.VERCEL
 
 export default defineConfig({
   base: isVercel ? '/' : '/Regional-App/',
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    },
+  },
 })
