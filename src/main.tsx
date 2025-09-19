@@ -1,23 +1,27 @@
-window.addEventListener("error", (e) => {
-  console.error("[window.error]", e.message, e.error?.stack || e.error)
-});
-window.addEventListener("unhandledrejection", (e) => {
-  console.error("[unhandledrejection]", e.reason);
-});
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import App from "./App";
+import Index from "./pages/Index";
+import NotFound from "./pages/NotFound";
+import AppErrorBoundary from "@/components/AppErrorBoundary";
+import "./index.css";
 
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { HashRouter } from 'react-router-dom'
-import App from './App'
-import AppErrorBoundary from '@/components/AppErrorBoundary'
-import './index.css'
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <App />,                // App is now the layout shell
+    children: [
+      { index: true, element: <Index /> },
+      { path: "*", element: <NotFound /> },
+    ],
+  },
+]);
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <AppErrorBoundary>
-      <HashRouter>
-        <App />
-      </HashRouter>
+      <RouterProvider router={router} />
     </AppErrorBoundary>
-  </React.StrictMode>,
-)
+  </React.StrictMode>
+);
