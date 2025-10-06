@@ -7,10 +7,20 @@ import BranchPicker from '@/components/BranchPicker';
 import { Branch, Badge as BadgeType } from '@/types';
 import { SupabaseProvider } from '@/lib/dataProvider';
 import { BadgeManager } from '@/lib/badges';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
 }
+
+// Literal class names so Tailwind keeps them in production
+const chipColorMap: Record<string, string> = {
+  santiago: 'bg-blue-500',
+  jarabacoa: 'bg-green-500',
+  la_vega: 'bg-purple-500',
+  puerto_plata: 'bg-yellow-500',
+  moca: 'bg-pink-500',
+};
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
   const provider = useMemo(() => new SupabaseProvider(), []);
@@ -22,6 +32,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [weeklyHighlight, setWeeklyHighlight] = useState<string>('');
   const [showEntry, setShowEntry] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
   const refresh = () => setRefreshKey((k) => k + 1);
 
   useEffect(() => {
@@ -55,6 +66,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const totalRegional = branches.reduce((sum, b) => sum + b.total, 0);
   const remaining = Math.max(regionalGoal - totalRegional, 0);
   const pctRegional = regionalGoal > 0 ? (totalRegional / regionalGoal) * 100 : 0;
+
+  // Santiago first, then alphabetical (no backend change required)
+  const branchesSorted = useMemo(() => {
+    return [...branches].sort((a, b) => {
+      if (a.id === 'santiago') return -1;
+      if (b.id === 'santiago') return 1;
+      return a.name.localeCompare(b.name, 'es');
+    });
+  }, [branches]);
 
   return (
     <div className="max-w-5xl mx-auto p-4 space-y-6">
@@ -99,8 +119,12 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           </div>
 
           <div className="text-center">
-            <div className="text-lg font-semibold">Restante: {remaining.toLocaleString('es-DO')}</div>
-            <div className="text-sm opacity-90">Meta Regional: {regionalGoal.toLocaleString('es-DO')}</div>
+            <div className="text-lg font-semibold">
+              Restante: {remaining.toLocaleString('es-DO')}
+            </div>
+            <div className="text-sm opacity-90">
+              Meta Regional: {regionalGoal.toLocaleString('es-DO')}
+            </div>
           </div>
 
           <div>
@@ -131,16 +155,36 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
       {/* Branch cards */}
       <div className="grid gap-4 md:grid-cols-2">
-        {branches.map((b) => {
+        {branchesSorted.map((b) => {
           const pctBranch = b.goal > 0 ? (b.total / b.goal) * 100 : 0;
           const pctRegionalBranch = regionalGoal ? Math.min((b.total / regionalGoal) * 100, 100) : 0;
+
+          // Use literal-class fallback to avoid Tailwind purge issues
+          const chipClass = chipColorMap[b.id] || b.color || 'bg-slate-500';
+
           return (
             <Card key={b.id} className="bg-white">
               <CardContent className="pt-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="text-lg font-semibold">{b.name}</div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${b.color} text-white`}>Meta {b.goal}</span>
+
+                  {/* Meta chip with tooltip and safe background color */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${chipClass} text-white cursor-default`}
+                        role="status"
+                        aria-label={`Meta de ${b.name}: ${b.goal.toLocaleString('es-DO')}`}
+                      >
+                        Meta {b.goal.toLocaleString('es-DO')}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span>Meta de {b.name}: {b.goal.toLocaleString('es-DO')}</span>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
+
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold">{b.total.toLocaleString('es-DO')}</div>
@@ -155,6 +199,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     <div className="text-xs text-muted-foreground">% del objetivo regional</div>
                   </div>
                 </div>
+
                 <Progress value={pctBranch} />
               </CardContent>
             </Card>
