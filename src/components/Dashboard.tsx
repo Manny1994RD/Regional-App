@@ -158,7 +158,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         {branchesSorted.map((b) => {
           const pctBranch = b.goal > 0 ? (b.total / b.goal) * 100 : 0;
           const pctRegionalBranch = regionalGoal ? Math.min((b.total / regionalGoal) * 100, 100) : 0;
-
+          const remainingBranch = Math.max(b.goal - b.total, 0);
           // Use literal-class fallback to avoid Tailwind purge issues
           const chipClass = chipColorMap[b.id] || b.color || 'bg-slate-500';
 
@@ -185,15 +185,23 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   </Tooltip>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                {/* 4 metrics: Total, Restante, % meta, % del objetivo regional */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold">{b.total.toLocaleString('es-DO')}</div>
                     <div className="text-xs text-muted-foreground">Total sucursal</div>
                   </div>
+
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">{remainingBranch.toLocaleString('es-DO')}</div>
+                    <div className="text-xs text-muted-foreground">Restante</div>
+                  </div>
+
                   <div className="text-center">
                     <div className="text-2xl font-bold">{pctBranch.toFixed(1)}%</div>
                     <div className="text-xs text-muted-foreground">% de meta</div>
                   </div>
+
                   <div className="text-center">
                     <div className="text-2xl font-bold">{pctRegionalBranch.toFixed(1)}%</div>
                     <div className="text-xs text-muted-foreground">% del objetivo regional</div>
